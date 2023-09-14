@@ -1,0 +1,7 @@
+{
+  "name": "id-card-scanner",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "vue-vite"
+}
