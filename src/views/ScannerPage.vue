@@ -67,6 +67,7 @@ import { ref,onMounted,onBeforeUnmount } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
+import { parse } from 'mrz';
 
 interface ParsedResult {
   Surname:string,
@@ -105,7 +106,11 @@ onBeforeUnmount(async () => {
 
 const initLabelRecognizer = async () => {
   loading.value = true;
-  await LabelRecognizer.initLicense({license:"DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="});
+  try {
+    await LabelRecognizer.initLicense({license:"DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="});  
+  } catch (error) {
+    console.log(error);
+  }
   await LabelRecognizer.initialize();
   if (Capacitor.isNativePlatform() === false) {
     await LabelRecognizer.updateRuntimeSettings({settings:{template:"MRZ"}});
@@ -209,8 +214,25 @@ const readFileAsDataURL = (file:File):Promise<string> => {
 }
 
 const readMRZ = async (base64:string) => {
-  let lineResults = await LabelRecognizer.recognizeBase64String({base64:base64});
-  console.log(lineResults);
+  let DLRResults = (await LabelRecognizer.recognizeBase64String({base64:base64})).results;
+  console.log(DLRResults);
+  let MRZLines = [];
+  for (let i = 0; i < DLRResults.length; i++) {
+    const DLRResult = DLRResults[i];
+    for (let j = 0; j < DLRResult.lineResults.length; j++) {
+      const lineResult = DLRResult.lineResults[j];
+      MRZLines.push(lineResult.text);
+    }
+  }
+  const parsed = parse(MRZLines);
+  console.log(parsed);
+  parsedResult.value = {
+    Surname:parsed.fields.lastName ?? "",
+    GivenName:parsed.fields.firstName ?? "",
+    IDNumber:parsed.fields.documentNumber ?? "",
+    DateOfBirth:parsed.fields.birthDate ?? "",
+    DateOfExpiry:parsed.fields.expirationDate ?? ""
+  }
 }
 
 const pickOrCapture = () => {
