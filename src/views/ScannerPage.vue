@@ -1,11 +1,11 @@
 <template>
-  <ion-page :class="showScanner?'hidden':''">
-    <ion-header :translucent="true">
+  <ion-page>
+    <ion-header :translucent="true" :class="showScanner?'hidden':''">
       <ion-toolbar>
         <ion-title>ID Scanner</ion-title>
       </ion-toolbar>
     </ion-header>
-    <ion-content :fullscreen="true">
+    <ion-content :fullscreen="true"  :class="showScanner?'hidden':''">
       <ion-list>
         <ion-item-group>
           <ion-item-divider>
@@ -37,12 +37,16 @@
         </ion-item-group>
       </ion-list>
     </ion-content>
+    <IDCardScanner
+        v-if="showScanner"
+        @onCanceled="scanningCanceled"
+        @onCaptured="captured"
+      ></IDCardScanner>
   </ion-page>
-  <IDCardScanner v-if="showScanner"></IDCardScanner>
 </template>
 
 <script setup lang="ts">
-import { IonPage, IonContent, IonHeader, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
+import { IonTitle, IonPage, IonContent, IonHeader, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
 import { ref } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 const frontImageBase64 = ref("");
@@ -58,6 +62,19 @@ const captureFront = () => {
 const captureBack = () => {
   isForFront = false;
   showScanner.value = true;
+}
+
+const scanningCanceled = () => {
+  showScanner.value = false;
+}
+
+const captured = (base64:string) => {
+  if (isForFront) {
+    frontImageBase64.value = "data:image/jpeg;base64," + base64;
+  }else{
+    backImageBase64.value = "data:image/jpeg;base64," + base64;
+  }
+  showScanner.value = false;
 }
 
 
