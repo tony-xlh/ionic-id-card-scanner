@@ -12,7 +12,7 @@
             <ion-label> Front </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img alt="front" :src="frontImageBase64" v-if="frontImageBase64"/>
+            <img class="id-card" alt="front" :src="frontImageBase64" v-if="frontImageBase64"/>
             <ion-button v-if="!frontImageBase64" @click="captureFront">
               Add Front Image
             </ion-button>
@@ -24,7 +24,7 @@
             <ion-label> Back </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img alt="back" :src="backImageBase64" v-if="backImageBase64"/>
+            <img class="id-card" alt="back" :src="backImageBase64" v-if="backImageBase64"/>
             <ion-button v-if="!backImageBase64" @click="captureBack">
               Add Back Image
             </ion-button>
@@ -42,26 +42,101 @@
         @onCanceled="scanningCanceled"
         @onCaptured="captured"
       ></IDCardScanner>
+      <ion-action-sheet 
+        :isOpen="isActionSheetOpen" 
+        header="Actions" 
+        :buttons="actionSheetButtons"
+        @didDismiss="setActionResult($event)"
+      ></ion-action-sheet>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonTitle, IonPage, IonContent, IonHeader, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
+import { IonActionSheet, IonTitle, IonPage, IonContent, IonHeader, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
 import { ref } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
+
 const frontImageBase64 = ref("");
 const backImageBase64 = ref("");
 const showScanner = ref(false);
+const isActionSheetOpen = ref(false);
+
 let isForFront = false;
+const actionSheetButtons = [
+  {
+    text: 'Pick an image',
+    data: {
+      action: 'pick',
+    },
+  },
+  {
+    text: 'Take a photo',
+    data: {
+      action: 'capture',
+    },
+  },
+  {
+    text: 'Cancel',
+    role: 'cancel',
+    data: {
+      action: 'cancel',
+    },
+  },
+];
+
+const setActionResult = async (ev: CustomEvent) => {
+  isActionSheetOpen.value = false;
+  if (!ev.detail.data) {
+    return;
+  }
+  if (ev.detail.data.action === "pick") {
+    let input:HTMLInputElement = document.createElement("input");
+    input.type = "file"
+    input.onchange = async function(){
+      if (input.files) {
+        if (input.files.length>0) {
+          let file = input.files[0];
+          let dataURL = await readFileAsDataURL(file);
+          if (isForFront) {
+            frontImageBase64.value = dataURL;
+          }else{
+            backImageBase64.value = dataURL;
+          }
+        }
+      }
+    }
+    input.click();
+  }else if (ev.detail.data.action === "capture") {
+    showScanner.value = true;
+  }
+}
+
+const readFileAsDataURL = (file:File):Promise<string> => {
+  return new Promise<string>((resolve, reject) => {
+    let fileReader = new FileReader();
+    fileReader.onload = function(e){
+      let dataURL:string = e.target!.result as string;
+      resolve(dataURL);
+    };
+    fileReader.onerror = function () {
+      reject("failed to read the file as dataURL");
+    };
+    fileReader.readAsDataURL(file);
+  }) 
+}
+
+const pickOrCapture = () => {
+  isActionSheetOpen.value = true;
+}
 
 const captureFront = () => {
   isForFront = true;
-  showScanner.value = true;
+  pickOrCapture();
 }
 
 const captureBack = () => {
   isForFront = false;
-  showScanner.value = true;
+  pickOrCapture();
 }
 
 const scanningCanceled = () => {
@@ -77,11 +152,13 @@ const captured = (base64:string) => {
   showScanner.value = false;
 }
 
-
 </script>
 
 <style scoped>
 .hidden {
   visibility: hidden;
+}
+.id-card {
+  width: 200px;
 }
 </style>
