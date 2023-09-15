@@ -34,6 +34,9 @@
           <ion-item-divider>
             <ion-label> Info </ion-label>
           </ion-item-divider>
+          <ion-item v-for="key in Object.keys(parsedResult)">
+            <ion-input :label="getDisplayNameOfMRZField(key)" v-model="(parsedResult as any)[key]"></ion-input>
+          </ion-item>
         </ion-item-group>
       </ion-list>
     </ion-content>
@@ -52,14 +55,42 @@
 </template>
 
 <script setup lang="ts">
-import { IonActionSheet, IonTitle, IonPage, IonContent, IonHeader, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
+import { IonActionSheet, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
 import { ref } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
+
+interface ParsedResult {
+  Surname:string,
+  GivenName:string,
+  IDNumber:string,
+  DateOfBirth:string,
+  DateOfExpiry:string
+}
 
 const frontImageBase64 = ref("");
 const backImageBase64 = ref("");
 const showScanner = ref(false);
 const isActionSheetOpen = ref(false);
+const parsedResult = ref<ParsedResult>({
+  Surname:"",
+  GivenName:"",
+  IDNumber:"",
+  DateOfBirth:"",
+  DateOfExpiry:""
+});
+
+const getDisplayNameOfMRZField = (fieldName:string) => {
+  if (fieldName === "IDNumber") {
+    return "ID number";
+  }else if (fieldName === "GivenName") {
+    return "Given name";
+  }else if (fieldName === "DateOfBirth") {
+    return "Date of birth";
+  }else if (fieldName === "DateOfExpiry") {
+    return "Date of expiry";
+  }
+  return fieldName;
+}
 
 let isForFront = false;
 const actionSheetButtons = [
@@ -86,6 +117,7 @@ const actionSheetButtons = [
 
 const setActionResult = async (ev: CustomEvent) => {
   isActionSheetOpen.value = false;
+  console.log(parsedResult);
   if (!ev.detail.data) {
     return;
   }
