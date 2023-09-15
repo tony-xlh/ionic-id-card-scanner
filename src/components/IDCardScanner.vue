@@ -1,6 +1,6 @@
 <template>
   <div class="scanner">
-    <Camera :active="true"></Camera>
+    <Camera :active="true" :desiredCamera="desiredCamera"></Camera>
     <div class="scannerHeader toolbar" style="justify-content: space-between;">
         <div class="closeButton" @click="close">
           <img class="icon" src="assets/cross.svg" alt="close"/>
@@ -20,18 +20,43 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue';
 import Camera from '../components/Camera.vue';
+import { CameraPreview } from 'capacitor-plugin-dynamsoft-camera-preview';
+
+const desiredCamera = ref("");
+const emit = defineEmits<{
+  (e: 'onCanceled'): void
+  (e: 'onCaptured',base64:string): void
+}>();
 
 const close = () => {
-
+  emit("onCanceled");
 }
 
-const switchCamera = () => {
-
+const switchCamera = async () => {
+  let cameras = (await CameraPreview.getAllCameras()).cameras;
+    let currentCameraName = (await CameraPreview.getSelectedCamera()).selectedCamera;
+    if (cameras && currentCameraName) {
+      let newIndex = 0;
+      for (let index = 0; index < cameras.length; index++) {
+        const name = cameras[index];
+        if (name.toLowerCase().indexOf(currentCameraName.toLowerCase()) != -1) {
+          if ((index + 1) > cameras.length -1) {
+            newIndex = 0;
+          }else{
+            newIndex = index + 1;
+          }
+          break;
+        }
+      }
+      desiredCamera.value = cameras[newIndex].toLowerCase();
+    }
 }
 
-const capture = () => {
-
+const capture = async () => {
+  const result = await CameraPreview.takeSnapshot({quality:100})
+  emit("onCaptured",result.base64);
 }
 
 </script>
