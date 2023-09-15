@@ -224,15 +224,19 @@ const readMRZ = async (base64:string) => {
       MRZLines.push(lineResult.text);
     }
   }
-  const parsed = parse(MRZLines);
-  console.log(parsed);
-  parsedResult.value = {
-    Surname:parsed.fields.lastName ?? "",
-    GivenName:parsed.fields.firstName ?? "",
-    IDNumber:parsed.fields.documentNumber ?? "",
-    DateOfBirth:parsed.fields.birthDate ?? "",
-    DateOfExpiry:parsed.fields.expirationDate ?? ""
+  try {
+    const parsed = parse(MRZLines);
+    parsedResult.value = {
+      Surname:parsed.fields.lastName ?? "",
+      GivenName:parsed.fields.firstName ?? "",
+      IDNumber:parsed.fields.documentNumber ?? "",
+      DateOfBirth:parsed.fields.birthDate ?? "",
+      DateOfExpiry:parsed.fields.expirationDate ?? ""
+    }  
+  } catch (error) {
+    alert("Failed to read the info from the card.");
   }
+  
 }
 
 const pickOrCapture = () => {
