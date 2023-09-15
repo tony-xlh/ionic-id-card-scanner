@@ -2,7 +2,13 @@
   <ion-page>
     <ion-header :translucent="true" :class="showScanner?'hidden':''">
       <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-back-button default-href="/"></ion-back-button>
+        </ion-buttons>
         <ion-title>ID Scanner</ion-title>
+        <ion-buttons slot="end">
+          <ion-button @click="save"> Save </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true"  :class="showScanner?'hidden':''">
@@ -55,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonActionSheet, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
+import { IonActionSheet, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
 import { ref } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 
@@ -182,6 +188,10 @@ const captured = (base64:string) => {
     backImageBase64.value = "data:image/jpeg;base64," + base64;
   }
   showScanner.value = false;
+}
+
+const save = () => {
+  
 }
 
 </script>
