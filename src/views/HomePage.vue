@@ -23,6 +23,8 @@ const router = useIonRouter();
 const scan = () => {
   router.push("/scanner")
 }
+
+
 </script>
 
 <style scoped>
