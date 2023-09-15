@@ -183,6 +183,7 @@ const setActionResult = async (ev: CustomEvent) => {
             frontImageBase64.value = dataURL;
           }else{
             backImageBase64.value = dataURL;
+            readMRZ(dataURL);
           }
         }
       }
@@ -205,6 +206,11 @@ const readFileAsDataURL = (file:File):Promise<string> => {
     };
     fileReader.readAsDataURL(file);
   }) 
+}
+
+const readMRZ = async (base64:string) => {
+  let lineResults = await LabelRecognizer.recognizeBase64String({base64:base64});
+  console.log(lineResults);
 }
 
 const pickOrCapture = () => {
@@ -230,6 +236,7 @@ const captured = (base64:string) => {
     frontImageBase64.value = "data:image/jpeg;base64," + base64;
   }else{
     backImageBase64.value = "data:image/jpeg;base64," + base64;
+    readMRZ("data:image/jpeg;base64,"+base64);
   }
   showScanner.value = false;
 }
