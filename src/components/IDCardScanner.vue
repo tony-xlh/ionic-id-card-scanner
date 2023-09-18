@@ -56,7 +56,6 @@ const close = () => {
 const onPlayed = async (resolution:string) => {
   frameWidth =  parseInt(resolution.split("x")[0]);
   frameHeight =  parseInt(resolution.split("x")[1]);
-  console.log("resolution:"+resolution);
   if (Capacitor.isNativePlatform()) {
     let orientation = await ScreenOrientation.orientation();
     console.log(orientation);
@@ -68,8 +67,6 @@ const onPlayed = async (resolution:string) => {
       }
     }
   }
-  console.log("===")
-  console.log(frameWidth+"x"+frameHeight);
   updateScanRegion();
 }
 
@@ -78,7 +75,6 @@ const updateScanRegion = () => {
     let regionWidth = 0.7*frameWidth;
     let desiredRegionHeight = regionWidth/(85.6/54);
     let height = Math.ceil(desiredRegionHeight/frameHeight*100);
-    console.log("height: "+height);
     scanRegion.value = {
       left:15,
       right:85,
@@ -90,7 +86,6 @@ const updateScanRegion = () => {
     let regionWidth = 0.8*frameWidth;
     let desiredRegionHeight = regionWidth/(85.6/54);
     let height = Math.ceil(desiredRegionHeight/frameHeight*100);
-    console.log("height: "+height);
     scanRegion.value = {
       left:10,
       right:90,

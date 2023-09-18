@@ -221,6 +221,9 @@ const readMRZ = async (base64:string) => {
     const DLRResult = DLRResults[i];
     for (let j = 0; j < DLRResult.lineResults.length; j++) {
       const lineResult = DLRResult.lineResults[j];
+      if (lineResult.confidence<50) { //low confidence line
+        continue;
+      }
       MRZLines.push(lineResult.text);
     }
   }
