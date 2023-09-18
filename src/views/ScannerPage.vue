@@ -18,8 +18,8 @@
             <ion-label> Front </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img class="id-card" @click="captureFront" alt="front" :src="frontImageBase64" v-if="frontImageBase64"/>
-            <ion-button v-if="!frontImageBase64" @click="captureFront">
+            <img class="id-card" @click="captureFront" alt="front" :src="frontImageDataURL" v-if="frontImageDataURL"/>
+            <ion-button v-if="!frontImageDataURL" @click="captureFront">
               Add Front Image
             </ion-button>
           </ion-item>
@@ -30,8 +30,8 @@
             <ion-label> Back </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img class="id-card" @click="captureBack" alt="back" :src="backImageBase64" v-if="backImageBase64"/>
-            <ion-button v-if="!backImageBase64" @click="captureBack">
+            <img class="id-card" @click="captureBack" alt="back" :src="backImageDataURL" v-if="backImageDataURL"/>
+            <ion-button v-if="!backImageDataURL" @click="captureBack">
               Add Back Image
             </ion-button>
           </ion-item>
@@ -68,17 +68,10 @@ import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { parse } from 'mrz';
+import { IDCardManager, ParsedResult } from '../utils/IDCardManager';
 
-interface ParsedResult {
-  Surname:string,
-  GivenName:string,
-  IDNumber:string,
-  DateOfBirth:string,
-  DateOfExpiry:string
-}
-
-const frontImageBase64 = ref("");
-const backImageBase64 = ref("");
+const frontImageDataURL = ref("");
+const backImageDataURL = ref("");
 const showScanner = ref(false);
 const loading = ref(false);
 const isActionSheetOpen = ref(false);
@@ -185,9 +178,9 @@ const setActionResult = async (ev: CustomEvent) => {
           let file = input.files[0];
           let dataURL = await readFileAsDataURL(file);
           if (isForFront) {
-            frontImageBase64.value = dataURL;
+            frontImageDataURL.value = dataURL;
           }else{
-            backImageBase64.value = dataURL;
+            backImageDataURL.value = dataURL;
             readMRZ(dataURL);
           }
         }
@@ -262,16 +255,40 @@ const scanningCanceled = () => {
 
 const captured = (base64:string) => {
   if (isForFront) {
-    frontImageBase64.value = "data:image/jpeg;base64," + base64;
+    frontImageDataURL.value = "data:image/jpeg;base64," + base64;
   }else{
-    backImageBase64.value = "data:image/jpeg;base64," + base64;
+    backImageDataURL.value = "data:image/jpeg;base64," + base64;
     readMRZ("data:image/jpeg;base64,"+base64);
   }
   showScanner.value = false;
 }
 
 const save = () => {
+  let incomplete = false;
+  let keys = Object.keys(parsedResult.value);
+   for (let index = 0; index < keys.length; index++) {
+    let key = keys[index];
+    if (!(parsedResult.value as any)[key]) {
+      incomplete = true;
+      break;
+    }
+   }
 
+  if (backImageDataURL.value === "" || frontImageDataURL.value === "") {
+    incomplete = true;
+  }
+  if (incomplete) {
+    alert("Incomplete");
+  }else{
+    let manager = new IDCardManager();
+    manager.saveIDCard({
+      backImage:backImageDataURL.value,
+      frontImage:frontImageDataURL.value,
+      info:parsedResult.value,
+      timestamp: new Date().getTime()
+    })
+    alert("Saved");
+  }
 }
 
 </script>
