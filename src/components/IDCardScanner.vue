@@ -30,6 +30,8 @@ import Camera from '../components/Camera.vue';
 import { CameraPreview, ScanRegion } from 'capacitor-plugin-dynamsoft-camera-preview';
 import crossSVG from '../assets/cross.svg';
 import switchSVG from '../assets/switch.svg';
+import { ScreenOrientation } from '@capacitor/screen-orientation';
+import { Capacitor } from '@capacitor/core';
 
 const desiredCamera = ref("");
 const emit = defineEmits<{
@@ -51,10 +53,23 @@ const close = () => {
   emit("onCanceled");
 }
 
-const onPlayed = (resolution:string) => {
+const onPlayed = async (resolution:string) => {
   frameWidth =  parseInt(resolution.split("x")[0]);
   frameHeight =  parseInt(resolution.split("x")[1]);
   console.log("resolution:"+resolution);
+  if (Capacitor.isNativePlatform()) {
+    let orientation = await ScreenOrientation.orientation();
+    console.log(orientation);
+    if (orientation.type.toString().indexOf("portrait") != -1) {
+      if (frameWidth>frameHeight) {
+        let temp = frameWidth;
+        frameWidth = frameHeight;
+        frameHeight = temp;
+      }
+    }
+  }
+  console.log("===")
+  console.log(frameWidth+"x"+frameHeight);
   updateScanRegion();
 }
 
@@ -72,13 +87,13 @@ const updateScanRegion = () => {
       measuredByPercentage:1
     };
   }else{
-    let regionWidth = 0.9*frameWidth;
+    let regionWidth = 0.8*frameWidth;
     let desiredRegionHeight = regionWidth/(85.6/54);
     let height = Math.ceil(desiredRegionHeight/frameHeight*100);
     console.log("height: "+height);
     scanRegion.value = {
-      left:5,
-      right:95,
+      left:10,
+      right:90,
       top:20,
       bottom:20+height,
       measuredByPercentage:1
