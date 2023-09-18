@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonActionSheet, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent } from '@ionic/vue';
+import { IonActionSheet, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent, useIonRouter } from '@ionic/vue';
 import { ref,onMounted,onBeforeUnmount } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
@@ -75,6 +75,7 @@ const backImageDataURL = ref("");
 const showScanner = ref(false);
 const loading = ref(false);
 const isActionSheetOpen = ref(false);
+const router = useIonRouter();
 const parsedResult = ref<ParsedResult>({
   Surname:"",
   GivenName:"",
@@ -288,6 +289,7 @@ const save = () => {
       timestamp: new Date().getTime()
     })
     alert("Saved");
+    router.back();
   }
 }
 
