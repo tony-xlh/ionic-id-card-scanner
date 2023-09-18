@@ -18,7 +18,7 @@
             <ion-label> Front </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img class="id-card" alt="front" :src="frontImageBase64" v-if="frontImageBase64"/>
+            <img class="id-card" @click="captureFront" alt="front" :src="frontImageBase64" v-if="frontImageBase64"/>
             <ion-button v-if="!frontImageBase64" @click="captureFront">
               Add Front Image
             </ion-button>
@@ -30,7 +30,7 @@
             <ion-label> Back </ion-label>
           </ion-item-divider>
           <ion-item>
-            <img class="id-card" alt="back" :src="backImageBase64" v-if="backImageBase64"/>
+            <img class="id-card" @click="captureBack" alt="back" :src="backImageBase64" v-if="backImageBase64"/>
             <ion-button v-if="!backImageBase64" @click="captureBack">
               Add Back Image
             </ion-button>
