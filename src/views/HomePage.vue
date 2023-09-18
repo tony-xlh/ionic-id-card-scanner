@@ -6,19 +6,36 @@
       </ion-toolbar>
     </ion-header>
     <ion-content :fullscreen="true">
+      <ion-list>
+        <ion-item v-for="card in scannedCards">
+          <ion-thumbnail slot="start">
+            <img style="object-fit: contain;" alt="idcard" :src="card.frontImage" />
+          </ion-thumbnail>
+          <ion-label> {{ card.info.GivenName + " " + card.info.Surname }} </ion-label>
+          <ion-button size="small" slot="end">Delete</ion-button>
+        </ion-item>
+      </ion-list>
     </ion-content>
     <ion-footer>
       <div class="toolbar">
-        <button class="button round" @click="scan">Scan</button>
+        <button class="shutter-button round" @click="scan">Scan</button>
       </div>
     </ion-footer>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar, IonFooter, useIonRouter } from '@ionic/vue';
+import { IDCardManager, ScannedIDCard } from '@/utils/IDCardManager';
+import { IonContent, IonHeader, IonPage, IonButton, IonList, IonThumbnail, IonItem, IonLabel, IonTitle, IonToolbar, IonFooter, useIonRouter } from '@ionic/vue';
+import { onMounted, ref } from 'vue';
 
+const scannedCards = ref<ScannedIDCard[]>([]);
 const router = useIonRouter();
+let manager = new IDCardManager();
+
+onMounted(async ()=> {
+  scannedCards.value = await manager.listIDCards();
+})
 
 const scan = () => {
   router.push("/scanner")
@@ -28,7 +45,7 @@ const scan = () => {
 </script>
 
 <style scoped>
-.button {
+.shutter-button {
   background-color: #3880ff;
   border: none;
   color: white;
@@ -41,7 +58,7 @@ const scan = () => {
   transform: translateY(-10px);
 }
 
-.button:hover {
+.shutter-button:hover {
   background-color: #79a8f9;
 }
 
