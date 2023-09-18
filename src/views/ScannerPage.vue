@@ -330,4 +330,10 @@ const save = () => {
 .id-card {
   width: 200px;
 }
+
+@media screen and (max-device-width: 600px){
+  .id-card {
+    width: 100%;
+  }
+}
 </style>
