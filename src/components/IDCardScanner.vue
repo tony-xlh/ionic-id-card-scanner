@@ -52,6 +52,7 @@ const close = () => {
 const onPlayed = (resolution:string) => {
   frameWidth =  parseInt(resolution.split("x")[0]);
   frameHeight =  parseInt(resolution.split("x")[1]);
+  console.log("resolution:"+resolution);
   updateScanRegion();
 }
 
