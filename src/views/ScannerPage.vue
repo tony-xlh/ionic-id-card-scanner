@@ -129,10 +129,11 @@ const initLabelRecognizer = async () => {
     await LabelRecognizer.updateRuntimeSettings({settings:{template:"MRZ"}});
     onResourceLoadedStartedListener = await LabelRecognizer.addListener("onResourcesLoadStarted",function(){
       loading.value = true;
-    })
+    });
     onResourceLoadedListener = await LabelRecognizer.addListener("onResourcesLoaded",function(){
       loading.value = false;
-    })
+    });
+    loading.value = false;
   }else{
     await LabelRecognizer.updateRuntimeSettings(
       {
@@ -146,8 +147,8 @@ const initLabelRecognizer = async () => {
         }
       }
     );
+    loading.value = false;
   }
-  loading.value = false;
 }
 
 const getDisplayNameOfMRZField = (fieldName:string) => {
