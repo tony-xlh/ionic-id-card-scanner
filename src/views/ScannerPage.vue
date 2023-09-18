@@ -133,7 +133,9 @@ const initLabelRecognizer = async () => {
     onResourceLoadedListener = await LabelRecognizer.addListener("onResourcesLoaded",function(){
       loading.value = false;
     });
-    loading.value = false;
+    setTimeout(function(){
+      loading.value = false;
+    },200)
   }else{
     await LabelRecognizer.updateRuntimeSettings(
       {
@@ -147,7 +149,9 @@ const initLabelRecognizer = async () => {
         }
       }
     );
-    loading.value = false;
+    setTimeout(function(){
+      loading.value = false;
+    },200)
   }
 }
 
