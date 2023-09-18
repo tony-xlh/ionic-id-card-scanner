@@ -69,6 +69,7 @@ import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
 import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { parse } from 'mrz';
 import { IDCardManager, ParsedResult } from '../utils/IDCardManager';
+import { getUrlParam } from '../utils/URLUtils';
 
 const frontImageDataURL = ref("");
 const backImageDataURL = ref("");
@@ -83,32 +84,53 @@ const parsedResult = ref<ParsedResult>({
   DateOfBirth:"",
   DateOfExpiry:""
 });
+
 let onResourceLoadedListener:PluginListenerHandle|undefined;
+let onResourceLoadedStartedListener:PluginListenerHandle|undefined;
+let existingCardKey = "";
 
 onMounted(()=>{
   if (onResourceLoadedListener) {
     onResourceLoadedListener.remove();
   }
+  if (onResourceLoadedStartedListener) {
+    onResourceLoadedStartedListener.remove();
+  }
   initLabelRecognizer();
+  let key = getUrlParam("key");
+  if (key) {
+    loadExistingCard(key)
+  }
 });
+
+const loadExistingCard = async (key:string) => {
+  let manager = new IDCardManager();
+  let card = await manager.getIDCard(key)
+  if (card) {
+    parsedResult.value = card.info;
+    backImageDataURL.value = card.backImage;
+    frontImageDataURL.value = card.frontImage;
+    existingCardKey = key;
+  }
+}
 
 onBeforeUnmount(async () => {
   if (onResourceLoadedListener) {
     onResourceLoadedListener.remove();
   }
+  if (onResourceLoadedStartedListener) {
+    onResourceLoadedStartedListener.remove();
+  }
 });
 
 const initLabelRecognizer = async () => {
   loading.value = true;
-  try {
-    await LabelRecognizer.initLicense({license:"DLS2eyJoYW5kc2hha2VDb2RlIjoiMjAwMDAxLTE2NDk4Mjk3OTI2MzUiLCJvcmdhbml6YXRpb25JRCI6IjIwMDAwMSIsInNlc3Npb25QYXNzd29yZCI6IndTcGR6Vm05WDJrcEQ5YUoifQ=="});  
-  } catch (error) {
-    console.log(error);
-  }
-  await LabelRecognizer.initialize();
   if (Capacitor.isNativePlatform() === false) {
     await LabelRecognizer.updateRuntimeSettings({settings:{template:"MRZ"}});
-    onResourceLoadedListener = LabelRecognizer.addListener("onResourcesLoaded",function(){
+    onResourceLoadedStartedListener = await LabelRecognizer.addListener("onResourcesLoadStarted",function(){
+      loading.value = true;
+    })
+    onResourceLoadedListener = await LabelRecognizer.addListener("onResourcesLoaded",function(){
       loading.value = false;
     })
   }else{
@@ -124,8 +146,8 @@ const initLabelRecognizer = async () => {
         }
       }
     );
-    loading.value = false;
   }
+  loading.value = false;
 }
 
 const getDisplayNameOfMRZField = (fieldName:string) => {
@@ -281,12 +303,18 @@ const save = () => {
   if (incomplete) {
     alert("Incomplete");
   }else{
+    let key;
+    if (existingCardKey) {
+      key = parseInt(existingCardKey);
+    }else{
+      key = new Date().getTime();
+    }
     let manager = new IDCardManager();
     manager.saveIDCard({
       backImage:backImageDataURL.value,
       frontImage:frontImageDataURL.value,
       info:parsedResult.value,
-      timestamp: new Date().getTime()
+      timestamp: key
     })
     alert("Saved");
     router.back();
