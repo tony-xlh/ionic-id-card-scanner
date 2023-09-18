@@ -1,6 +1,11 @@
 <template>
   <div class="scanner">
-    <Camera :active="true" :desiredCamera="desiredCamera"></Camera>
+    <Camera 
+      :active="true" 
+      :desiredCamera="desiredCamera"
+      :scanRegion="scanRegion"
+      @onPlayed="onPlayed"
+    ></Camera>
     <div class="scannerHeader toolbar" style="justify-content: space-between;">
         <div class="closeButton" @click="close">
           <img class="icon" src="assets/cross.svg" alt="close"/>
@@ -22,7 +27,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import Camera from '../components/Camera.vue';
-import { CameraPreview } from 'capacitor-plugin-dynamsoft-camera-preview';
+import { CameraPreview, ScanRegion } from 'capacitor-plugin-dynamsoft-camera-preview';
 
 const desiredCamera = ref("");
 const emit = defineEmits<{
@@ -30,8 +35,53 @@ const emit = defineEmits<{
   (e: 'onCaptured',base64:string): void
 }>();
 
+let frameWidth = 1280;
+let frameHeight = 720;
+const scanRegion = ref<ScanRegion>({
+  left:5,
+  right:95,
+  top:20,
+  bottom:40,
+  measuredByPercentage:1
+});
+
 const close = () => {
   emit("onCanceled");
+}
+
+const onPlayed = (resolution:string) => {
+  frameWidth =  parseInt(resolution.split("x")[0]);
+  frameHeight =  parseInt(resolution.split("x")[1]);
+  updateScanRegion();
+}
+
+const updateScanRegion = () => {
+  if (frameWidth>frameHeight) {
+    let regionWidth = 0.7*frameWidth;
+    let desiredRegionHeight = regionWidth/(85.6/54);
+    let height = Math.ceil(desiredRegionHeight/frameHeight*100);
+    console.log("height: "+height);
+    scanRegion.value = {
+      left:15,
+      right:85,
+      top:10,
+      bottom:10+height,
+      measuredByPercentage:1
+    };
+  }else{
+    let regionWidth = 0.9*frameWidth;
+    let desiredRegionHeight = regionWidth/(85.6/54);
+    let height = Math.ceil(desiredRegionHeight/frameHeight*100);
+    console.log("height: "+height);
+    scanRegion.value = {
+      left:5,
+      right:95,
+      top:20,
+      bottom:20+height,
+      measuredByPercentage:1
+    };
+  }
+  
 }
 
 const switchCamera = async () => {
