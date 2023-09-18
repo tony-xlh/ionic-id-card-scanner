@@ -7,12 +7,14 @@
     </ion-header>
     <ion-content :fullscreen="true">
       <ion-list>
-        <ion-item v-for="card in scannedCards">
+        <ion-item v-for="(card,index) in scannedCards">
           <ion-thumbnail slot="start">
             <img style="object-fit: contain;" alt="idcard" :src="card.frontImage" />
           </ion-thumbnail>
           <ion-label> {{ card.info.GivenName + " " + card.info.Surname }} </ion-label>
-          <ion-button size="small" slot="end">Delete</ion-button>
+          <ion-button size="small" slot="end" @click="removeSelected(index)" fill="clear">
+            <ion-icon slot="icon-only" :icon="trashOutline"/>
+          </ion-button>
         </ion-item>
       </ion-list>
     </ion-content>
@@ -26,8 +28,9 @@
 
 <script setup lang="ts">
 import { IDCardManager, ScannedIDCard } from '@/utils/IDCardManager';
-import { IonContent, IonHeader, IonPage, IonButton, IonList, IonThumbnail, IonItem, IonLabel, IonTitle, IonToolbar, IonFooter, useIonRouter } from '@ionic/vue';
+import { IonContent, IonHeader, IonPage, IonButton,IonIcon, IonList, IonThumbnail, IonItem, IonLabel, IonTitle, IonToolbar, IonFooter, useIonRouter } from '@ionic/vue';
 import { onMounted, ref } from 'vue';
+import { trashOutline } from 'ionicons/icons';
 
 const scannedCards = ref<ScannedIDCard[]>([]);
 const router = useIonRouter();
@@ -39,6 +42,11 @@ onMounted(async ()=> {
 
 const scan = () => {
   router.push("/scanner")
+}
+
+const removeSelected = async (index:number) => {
+  await manager.deleteIDCard(scannedCards.value[index].timestamp.toString());
+  scannedCards.value = await manager.listIDCards();
 }
 
 
