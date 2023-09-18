@@ -8,12 +8,12 @@
     ></Camera>
     <div class="scannerHeader toolbar" style="justify-content: space-between;">
         <div class="closeButton" @click="close">
-          <img class="icon" src="assets/cross.svg" alt="close"/>
+          <img class="icon" :src="crossSVG" alt="close"/>
         </div>
     </div>
     <div class="scannerFooter">
       <div class="switchButton" @click="switchCamera">
-        <img class="icon" src="assets/switch.svg" alt="switch"/>
+        <img class="icon" :src="switchSVG" alt="switch"/>
       </div>
       <div class="shutter">
         <div class="shutterButton" @click="capture"></div>
@@ -28,6 +28,8 @@
 import { ref } from 'vue';
 import Camera from '../components/Camera.vue';
 import { CameraPreview, ScanRegion } from 'capacitor-plugin-dynamsoft-camera-preview';
+import crossSVG from '../assets/cross.svg';
+import switchSVG from '../assets/switch.svg';
 
 const desiredCamera = ref("");
 const emit = defineEmits<{
