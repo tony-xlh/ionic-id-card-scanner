@@ -62,7 +62,7 @@
 </template>
 
 <script setup lang="ts">
-import { IonActionSheet, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent, useIonRouter } from '@ionic/vue';
+import { IonActionSheet,IonLoading, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent, useIonRouter } from '@ionic/vue';
 import { ref,onMounted,onBeforeUnmount } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
