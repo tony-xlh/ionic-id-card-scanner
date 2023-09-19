@@ -82,13 +82,6 @@ const updateScanRegion = () => {
       bottom:10+height,
       measuredByPercentage:1
     };
-    console.log({
-      left:15,
-      right:85,
-      top:10,
-      bottom:10+height,
-      measuredByPercentage:1
-    })
   }else{
     let regionWidth = 0.8*frameWidth;
     let desiredRegionHeight = regionWidth/(85.6/54);
@@ -100,15 +93,7 @@ const updateScanRegion = () => {
       bottom:20+height,
       measuredByPercentage:1
     };
-    console.log({
-      left:10,
-      right:90,
-      top:20,
-      bottom:20+height,
-      measuredByPercentage:1
-    })
   }
-  
 }
 
 const switchCamera = async () => {

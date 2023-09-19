@@ -26,19 +26,14 @@ onMounted(async () => {
   if (onPlayedListener) {
     onPlayedListener.remove();
   }
-
+  
   onPlayedListener = await CameraPreview.addListener("onPlayed", async (result:{resolution:string}) => {
     emit("onPlayed",result.resolution);
   });
 
-  try {
-    if (props.scanRegion){
-      await CameraPreview.setScanRegion({region:props.scanRegion});
-    }  
-  } catch (error) {
-    console.log(error);
-  }
-  
+  //set original scan region
+  await CameraPreview.setScanRegion({region:{left:10,right:90,top:20,bottom:50,measuredByPercentage:1}});
+ 
   if (props.desiredCamera) {
     await selectDesiredCamera();
   }
