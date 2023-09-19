@@ -200,7 +200,7 @@ const setActionResult = async (ev: CustomEvent) => {
     return;
   }
   if (ev.detail.data.action === "pick") {
-    if (Capacitor.getPlatform() === "ios") {
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios") {
       const image = await Camera.pickImages({
         quality: 90,
         limit: 1
