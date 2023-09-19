@@ -70,8 +70,9 @@ import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { parse } from 'mrz';
 import { IDCardManager, ParsedResult } from '../utils/IDCardManager';
 import { getUrlParam } from '../utils/URLUtils';
-import { Camera } from '@capacitor/camera';
+import { Camera, CameraResultType } from '@capacitor/camera';
 import { Filesystem, Encoding } from '@capacitor/filesystem';
+import { isPlatform } from '@ionic/vue';
 
 const frontImageDataURL = ref("");
 const backImageDataURL = ref("");
@@ -200,36 +201,54 @@ const setActionResult = async (ev: CustomEvent) => {
     return;
   }
   if (ev.detail.data.action === "pick") {
-    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios") {
-      const image = await Camera.pickImages({
-        quality: 90,
-        limit: 1
-      });
-      let path = image.photos[0].path;
-      if (path) {
-        const contents = await Filesystem.readFile({
-          path: path
+    if (isPlatform("ios")) {
+      if (Capacitor.isNativePlatform()) {
+        const image = await Camera.pickImages({
+          quality: 90,
+          limit: 1
         });
-        let head = "";
-        if (path.toLowerCase().indexOf(".jpg") != -1) {
-          head = "data:image/jpeg;base64,";
+        let path = image.photos[0].path;
+        if (path) {
+          const contents = await Filesystem.readFile({
+            path: path
+          });
+          let head = "";
+          if (path.toLowerCase().indexOf(".jpg") != -1) {
+            head = "data:image/jpeg;base64,";
+          }
+          if (path.toLowerCase().indexOf(".png") != -1) {
+            head = "data:image/png;base64,";
+          }
+          if (path.toLowerCase().indexOf(".bmp") != -1) {
+            head = "data:image/bmp;base64,";
+          }
+          let dataURL = head + (contents.data as string);
+          if (isForFront) {
+            frontImageDataURL.value = dataURL;
+          }else{
+            backImageDataURL.value = dataURL;
+            readMRZ(dataURL);
+          }
         }
-        if (path.toLowerCase().indexOf(".png") != -1) {
-          head = "data:image/png;base64,";
-        }
-        if (path.toLowerCase().indexOf(".bmp") != -1) {
-          head = "data:image/bmp;base64,";
-        }
-        let dataURL = head + (contents.data as string);
-        if (isForFront) {
-          frontImageDataURL.value = dataURL;
-        }else{
-          backImageDataURL.value = dataURL;
-          readMRZ(dataURL);
+      }else{
+        console.log("get photo");
+        const image = await Camera.getPhoto({
+          quality: 90,
+          resultType:CameraResultType.DataUrl
+        });
+        if (image.dataUrl) {
+          if (isForFront) {
+            frontImageDataURL.value = image.dataUrl;
+          }else{
+            backImageDataURL.value = image.dataUrl;
+            readMRZ(image.dataUrl);
+          }
         }
       }
     }else{
+      console.log("input pick");
       let input:HTMLInputElement = document.createElement("input");
+      document.body.appendChild(input);
       input.type = "file"
       input.onchange = async function(){
         if (input.files) {
