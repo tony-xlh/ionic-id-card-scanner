@@ -39,8 +39,10 @@ onMounted(async () => {
     console.log(error);
   }
   
-
-  await selectDesiredCamera();
+  if (props.desiredCamera) {
+    await selectDesiredCamera();
+  }
+  
   if (props.active === true) {
     await CameraPreview.startCamera();
   }
