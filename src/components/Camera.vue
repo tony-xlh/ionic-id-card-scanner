@@ -31,9 +31,14 @@ onMounted(async () => {
     emit("onPlayed",result.resolution);
   });
 
-  if (props.scanRegion){
-    await CameraPreview.setScanRegion({region:props.scanRegion});
+  try {
+    if (props.scanRegion){
+      await CameraPreview.setScanRegion({region:props.scanRegion});
+    }  
+  } catch (error) {
+    console.log(error);
   }
+  
 
   await selectDesiredCamera();
   if (props.active === true) {
