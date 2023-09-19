@@ -211,7 +211,17 @@ const setActionResult = async (ev: CustomEvent) => {
         const contents = await Filesystem.readFile({
           path: path
         });
-        let dataURL = (contents.data as string);
+        let head = "";
+        if (path.toLowerCase().indexOf(".jpg") != -1) {
+          head = "data:image/jpeg;base64,";
+        }
+        if (path.toLowerCase().indexOf(".png") != -1) {
+          head = "data:image/png;base64,";
+        }
+        if (path.toLowerCase().indexOf(".bmp") != -1) {
+          head = "data:image/bmp;base64,";
+        }
+        let dataURL = head + (contents.data as string);
         if (isForFront) {
           frontImageDataURL.value = dataURL;
         }else{
