@@ -70,6 +70,8 @@ import { Capacitor, PluginListenerHandle } from '@capacitor/core';
 import { parse } from 'mrz';
 import { IDCardManager, ParsedResult } from '../utils/IDCardManager';
 import { getUrlParam } from '../utils/URLUtils';
+import { Camera } from '@capacitor/camera';
+import { Filesystem, Encoding } from '@capacitor/filesystem';
 
 const frontImageDataURL = ref("");
 const backImageDataURL = ref("");
@@ -198,23 +200,44 @@ const setActionResult = async (ev: CustomEvent) => {
     return;
   }
   if (ev.detail.data.action === "pick") {
-    let input:HTMLInputElement = document.createElement("input");
-    input.type = "file"
-    input.onchange = async function(){
-      if (input.files) {
-        if (input.files.length>0) {
-          let file = input.files[0];
-          let dataURL = await readFileAsDataURL(file);
-          if (isForFront) {
-            frontImageDataURL.value = dataURL;
-          }else{
-            backImageDataURL.value = dataURL;
-            readMRZ(dataURL);
+    if (Capacitor.getPlatform() === "ios") {
+      const image = await Camera.pickImages({
+        quality: 90,
+        limit: 1
+        
+      });
+      let path = image.photos[0].path;
+      if (path) {
+        const contents = await Filesystem.readFile({
+          path: path
+        });
+        let dataURL = (contents.data as string);
+        if (isForFront) {
+          frontImageDataURL.value = dataURL;
+        }else{
+          backImageDataURL.value = dataURL;
+          readMRZ(dataURL);
+        }
+      }
+    }else{
+      let input:HTMLInputElement = document.createElement("input");
+      input.type = "file"
+      input.onchange = async function(){
+        if (input.files) {
+          if (input.files.length>0) {
+            let file = input.files[0];
+            let dataURL = await readFileAsDataURL(file);
+            if (isForFront) {
+              frontImageDataURL.value = dataURL;
+            }else{
+              backImageDataURL.value = dataURL;
+              readMRZ(dataURL);
+            }
           }
         }
       }
+      input.click();
     }
-    input.click();
   }else if (ev.detail.data.action === "capture") {
     showScanner.value = true;
   }
