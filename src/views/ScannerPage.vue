@@ -204,7 +204,6 @@ const setActionResult = async (ev: CustomEvent) => {
       const image = await Camera.pickImages({
         quality: 90,
         limit: 1
-        
       });
       let path = image.photos[0].path;
       if (path) {
