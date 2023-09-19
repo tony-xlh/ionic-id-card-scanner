@@ -22,7 +22,6 @@
     "@capacitor/keyboard": "5.0.6",
     "@capacitor/screen-orientation": "^5.0.6",
     "@capacitor/status-bar": "5.0.6",
-    "@ionic/pwa-elements": "^3.2.2",
     "@ionic/vue": "^7.0.0",
     "@ionic/vue-router": "^7.0.0",
     "capacitor-plugin-dynamsoft-camera-preview": "^2.0.0",
