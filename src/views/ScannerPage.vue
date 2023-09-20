@@ -80,13 +80,9 @@ import { IonButtons, IonBackButton, IonTitle,IonModal, IonPage, IonContent, IonH
 import { ref,onMounted } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
-import { Capacitor } from '@capacitor/core';
 import { parse } from 'mrz';
 import { IDCardManager, ParsedResult } from '../utils/IDCardManager';
 import { getUrlParam } from '../utils/URLUtils';
-import { Camera, CameraResultType } from '@capacitor/camera';
-import { Filesystem } from '@capacitor/filesystem';
-import { isPlatform } from '@ionic/vue';
 
 const frontImageDataURL = ref("");
 const backImageDataURL = ref("");
