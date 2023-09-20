@@ -127,18 +127,16 @@ onBeforeUnmount(async () => {
 });
 
 const initLabelRecognizer = async () => {
-  loading.value = true;
   if (Capacitor.isNativePlatform() === false) {
     await LabelRecognizer.updateRuntimeSettings({settings:{template:"MRZ"}});
     onResourceLoadedStartedListener = await LabelRecognizer.addListener("onResourcesLoadStarted",function(){
+      console.log("loadstarted");
       loading.value = true;
     });
     onResourceLoadedListener = await LabelRecognizer.addListener("onResourcesLoaded",function(){
+      console.log("loaded");
       loading.value = false;
     });
-    setTimeout(function(){
-      loading.value = false;
-    },200)
   }else{
     await LabelRecognizer.updateRuntimeSettings(
       {
@@ -152,9 +150,6 @@ const initLabelRecognizer = async () => {
         }
       }
     );
-    setTimeout(function(){
-      loading.value = false;
-    },200)
   }
 }
 
