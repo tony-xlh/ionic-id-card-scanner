@@ -47,21 +47,29 @@
       </ion-list>
     </ion-content>
     <IDCardScanner
-        v-if="showScanner"
-        @onCanceled="scanningCanceled"
-        @onCaptured="captured"
-      ></IDCardScanner>
-      <ion-action-sheet 
-        :isOpen="isActionSheetOpen" 
-        header="Actions" 
-        :buttons="actionSheetButtons"
-        @didDismiss="setActionResult($event)"
-      ></ion-action-sheet>
+      v-if="showScanner"
+      @onCanceled="scanningCanceled"
+      @onCaptured="captured"
+    ></IDCardScanner>
+    <ion-modal ref="modal" :is-open="isModalOpen">
+      <ion-header>
+        <ion-toolbar>
+          <ion-buttons slot="start">
+            <ion-button @click="cancel">Cancel</ion-button>
+          </ion-buttons>
+          <ion-title>Select an action</ion-title>
+        </ion-toolbar>
+      </ion-header>
+      <ion-content class="ion-padding">
+        <ion-button expand="block" @click="pickImage()">Pick an Image</ion-button>
+        <ion-button expand="block" @click="takePhoto()">Take a photo</ion-button>
+      </ion-content>
+    </ion-modal>
   </ion-page>
 </template>
 
 <script setup lang="ts">
-import { IonActionSheet,IonLoading, IonButtons, IonBackButton, IonTitle, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent, useIonRouter } from '@ionic/vue';
+import { IonButtons, IonBackButton, IonTitle,IonModal, IonPage, IonContent, IonHeader, IonInput, IonToolbar, IonButton, IonItem, IonItemDivider, IonItemGroup, IonLabel, IonList, IonCardContent, useIonRouter } from '@ionic/vue';
 import { ref,onMounted } from 'vue';
 import IDCardScanner from '../components/IDCardScanner.vue';
 import { LabelRecognizer } from 'capacitor-plugin-dynamsoft-label-recognizer';
@@ -76,8 +84,9 @@ import { isPlatform } from '@ionic/vue';
 const frontImageDataURL = ref("");
 const backImageDataURL = ref("");
 const showScanner = ref(false);
-const isActionSheetOpen = ref(false);
 const router = useIonRouter();
+const modal = ref();
+const isModalOpen = ref(false);
 const parsedResult = ref<ParsedResult>({
   Surname:"",
   GivenName:"",
@@ -120,57 +129,62 @@ const getDisplayNameOfMRZField = (fieldName:string) => {
 }
 
 let isForFront = false;
-const actionSheetButtons = [
-  {
-    text: 'Pick an image',
-    data: {
-      action: 'pick',
-    },
-  },
-  {
-    text: 'Take a photo',
-    data: {
-      action: 'capture',
-    },
-  },
-  {
-    text: 'Cancel',
-    role: 'cancel',
-    data: {
-      action: 'cancel',
-    },
-  },
-];
 
-const setActionResult = async (ev: CustomEvent) => {
-  isActionSheetOpen.value = false;
-  console.log(parsedResult);
-  if (!ev.detail.data) {
-    return;
-  }
-  if (ev.detail.data.action === "pick") {
-    if (isPlatform("ios")) {
-      if (Capacitor.isNativePlatform()) {
-        const image = await Camera.pickImages({
-          quality: 90,
-          limit: 1
+const pickImage = async () => {
+  if (isPlatform("ios")) {
+    if (Capacitor.isNativePlatform()) {
+      const image = await Camera.pickImages({
+        quality: 90,
+        limit: 1
+      });
+      let path = image.photos[0].path;
+      if (path) {
+        const contents = await Filesystem.readFile({
+          path: path
         });
-        let path = image.photos[0].path;
-        if (path) {
-          const contents = await Filesystem.readFile({
-            path: path
-          });
-          let head = "";
-          if (path.toLowerCase().indexOf(".jpg") != -1) {
-            head = "data:image/jpeg;base64,";
-          }
-          if (path.toLowerCase().indexOf(".png") != -1) {
-            head = "data:image/png;base64,";
-          }
-          if (path.toLowerCase().indexOf(".bmp") != -1) {
-            head = "data:image/bmp;base64,";
-          }
-          let dataURL = head + (contents.data as string);
+        let head = "";
+        if (path.toLowerCase().indexOf(".jpg") != -1) {
+          head = "data:image/jpeg;base64,";
+        }
+        if (path.toLowerCase().indexOf(".png") != -1) {
+          head = "data:image/png;base64,";
+        }
+        if (path.toLowerCase().indexOf(".bmp") != -1) {
+          head = "data:image/bmp;base64,";
+        }
+        let dataURL = head + (contents.data as string);
+        if (isForFront) {
+          frontImageDataURL.value = dataURL;
+        }else{
+          backImageDataURL.value = dataURL;
+          readMRZ(dataURL);
+        }
+      }
+    }else{
+      console.log("get photo");
+      const image = await Camera.getPhoto({
+        quality: 90,
+        resultType:CameraResultType.DataUrl
+      });
+      if (image.dataUrl) {
+        if (isForFront) {
+          frontImageDataURL.value = image.dataUrl;
+        }else{
+          backImageDataURL.value = image.dataUrl;
+          readMRZ(image.dataUrl);
+        }
+      }
+    }
+  }else{
+    console.log("input pick");
+    let input:HTMLInputElement = document.createElement("input");
+    document.body.appendChild(input);
+    input.type = "file"
+    input.onchange = async function(){
+      if (input.files) {
+        if (input.files.length>0) {
+          let file = input.files[0];
+          let dataURL = await readFileAsDataURL(file);
           if (isForFront) {
             frontImageDataURL.value = dataURL;
           }else{
@@ -178,45 +192,20 @@ const setActionResult = async (ev: CustomEvent) => {
             readMRZ(dataURL);
           }
         }
-      }else{
-        console.log("get photo");
-        const image = await Camera.getPhoto({
-          quality: 90,
-          resultType:CameraResultType.DataUrl
-        });
-        if (image.dataUrl) {
-          if (isForFront) {
-            frontImageDataURL.value = image.dataUrl;
-          }else{
-            backImageDataURL.value = image.dataUrl;
-            readMRZ(image.dataUrl);
-          }
-        }
       }
-    }else{
-      console.log("input pick");
-      let input:HTMLInputElement = document.createElement("input");
-      document.body.appendChild(input);
-      input.type = "file"
-      input.onchange = async function(){
-        if (input.files) {
-          if (input.files.length>0) {
-            let file = input.files[0];
-            let dataURL = await readFileAsDataURL(file);
-            if (isForFront) {
-              frontImageDataURL.value = dataURL;
-            }else{
-              backImageDataURL.value = dataURL;
-              readMRZ(dataURL);
-            }
-          }
-        }
-      }
-      input.click();
     }
-  }else if (ev.detail.data.action === "capture") {
-    showScanner.value = true;
+    input.click();
   }
+  isModalOpen.value = false;
+}
+
+const takePhoto = () => {
+  isModalOpen.value = false;
+  showScanner.value = true;
+}
+
+const cancel = () => {
+  isModalOpen.value = false;
 }
 
 const readFileAsDataURL = (file:File):Promise<string> => {
@@ -263,7 +252,7 @@ const readMRZ = async (base64:string) => {
 }
 
 const pickOrCapture = () => {
-  isActionSheetOpen.value = true;
+  isModalOpen.value = true;
 }
 
 const captureFront = () => {
