@@ -57,12 +57,19 @@
           <ion-buttons slot="start">
             <ion-button @click="cancel">Cancel</ion-button>
           </ion-buttons>
-          <ion-title>Select an action</ion-title>
+          <ion-title>Action</ion-title>
         </ion-toolbar>
       </ion-header>
       <ion-content class="ion-padding">
-        <ion-button expand="block" @click="pickImage()">Pick an Image</ion-button>
-        <ion-button expand="block" @click="takePhoto()">Take a photo</ion-button>
+        <label for="file-input">
+          <ion-button expand="block" @click="triggerPickingImage()">
+            Pick an Image
+          </ion-button>
+          <input type="file" ref="fileInput" @change="filePicked" id="file-input"/>
+        </label>
+        <ion-button expand="block" @click="takePhoto()">
+          Take a photo
+        </ion-button>
       </ion-content>
     </ion-modal>
   </ion-page>
@@ -86,6 +93,7 @@ const backImageDataURL = ref("");
 const showScanner = ref(false);
 const router = useIonRouter();
 const modal = ref();
+const fileInput = ref();
 const isModalOpen = ref(false);
 const parsedResult = ref<ParsedResult>({
   Surname:"",
@@ -130,29 +138,18 @@ const getDisplayNameOfMRZField = (fieldName:string) => {
 
 let isForFront = false;
 
-const pickImage = async () => {
-  if (isPlatform("ios")) {
-    if (Capacitor.isNativePlatform()) {
-      const image = await Camera.pickImages({
-        quality: 90,
-        limit: 1
-      });
-      let path = image.photos[0].path;
-      if (path) {
-        const contents = await Filesystem.readFile({
-          path: path
-        });
-        let head = "";
-        if (path.toLowerCase().indexOf(".jpg") != -1) {
-          head = "data:image/jpeg;base64,";
-        }
-        if (path.toLowerCase().indexOf(".png") != -1) {
-          head = "data:image/png;base64,";
-        }
-        if (path.toLowerCase().indexOf(".bmp") != -1) {
-          head = "data:image/bmp;base64,";
-        }
-        let dataURL = head + (contents.data as string);
+const triggerPickingImage = async () => {
+  fileInput.value.click();
+}
+
+const filePicked = () => {
+  isModalOpen.value = false;
+  const loadImage = async () => {
+    let input = fileInput.value;
+    if (input.files) {
+      if (input.files.length>0) {
+        let file = input.files[0];
+        let dataURL = await readFileAsDataURL(file);
         if (isForFront) {
           frontImageDataURL.value = dataURL;
         }else{
@@ -160,43 +157,9 @@ const pickImage = async () => {
           readMRZ(dataURL);
         }
       }
-    }else{
-      console.log("get photo");
-      const image = await Camera.getPhoto({
-        quality: 90,
-        resultType:CameraResultType.DataUrl
-      });
-      if (image.dataUrl) {
-        if (isForFront) {
-          frontImageDataURL.value = image.dataUrl;
-        }else{
-          backImageDataURL.value = image.dataUrl;
-          readMRZ(image.dataUrl);
-        }
-      }
     }
-  }else{
-    console.log("input pick");
-    let input:HTMLInputElement = document.createElement("input");
-    document.body.appendChild(input);
-    input.type = "file"
-    input.onchange = async function(){
-      if (input.files) {
-        if (input.files.length>0) {
-          let file = input.files[0];
-          let dataURL = await readFileAsDataURL(file);
-          if (isForFront) {
-            frontImageDataURL.value = dataURL;
-          }else{
-            backImageDataURL.value = dataURL;
-            readMRZ(dataURL);
-          }
-        }
-      }
-    }
-    input.click();
   }
-  isModalOpen.value = false;
+  loadImage();
 }
 
 const takePhoto = () => {
@@ -322,6 +285,9 @@ const save = () => {
 }
 .id-card {
   width: 200px;
+}
+#file-input {
+  display: none;
 }
 
 @media screen and (max-device-width: 600px){
