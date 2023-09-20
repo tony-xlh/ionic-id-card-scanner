@@ -20,7 +20,6 @@ let onPlayedListener:PluginListenerHandle|undefined;
 
 onMounted(async () => {
   console.log(props);
-  await CameraPreview.requestCameraPermission();
   await CameraPreview.initialize();
 
   if (onPlayedListener) {
